@@ -1,10 +1,12 @@
 package com.ame38.autocalendaralarms
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.CalendarContract
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +35,10 @@ class MainActivity : AppCompatActivity() {
 
         calendarList = findViewById(R.id.calendarList)
         calendarList.layoutManager = LinearLayoutManager(this)
+
+        findViewById<Button>(R.id.viewEventsButton).setOnClickListener {
+            startActivity(Intent(this, EventsActivity::class.java))
+        }
 
         permissionText = findViewById(R.id.permissionText)
         permissionText.setOnClickListener {
