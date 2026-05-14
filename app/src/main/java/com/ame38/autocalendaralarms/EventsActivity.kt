@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.CalendarContract
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -50,7 +51,13 @@ class EventsActivity : AppCompatActivity() {
             emptyText.visibility = View.GONE
             eventsList.visibility = View.VISIBLE
             eventsList.adapter = EventAdapter(events)
+            scheduleAlarms(events)
         }
+    }
+
+    private fun scheduleAlarms(events: List<EventEntry>) {
+        val count = AlarmScheduler.scheduleAlarms(this, events)
+        Toast.makeText(this, "$count alarms set", Toast.LENGTH_SHORT).show()
     }
 
     private fun showEmpty(message: String) {
