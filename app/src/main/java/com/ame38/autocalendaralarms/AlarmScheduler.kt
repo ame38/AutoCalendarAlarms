@@ -6,16 +6,15 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 
-private const val LEAD_TIME_MILLIS = 15 * 60 * 1000L
-
 object AlarmScheduler {
 
     fun scheduleAlarms(context: Context, events: List<EventEntry>): Int {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val leadTimeMillis = CalendarPrefs.getLeadTimeMinutes(context) * 60 * 1000L
         var scheduledCount = 0
 
         for (event in events) {
-            val triggerAt = event.beginTime - LEAD_TIME_MILLIS
+            val triggerAt = event.beginTime - leadTimeMillis
             if (triggerAt <= System.currentTimeMillis()) continue
 
             scheduleAlarm(context, alarmManager, event, triggerAt)
