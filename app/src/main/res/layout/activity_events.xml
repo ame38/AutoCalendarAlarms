@@ -14,6 +14,13 @@
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
 
+    <Button
+        android:id="@+id/refreshButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/refresh_events"
+        android:layout_marginBottom="16dp" />
+
     <TextView
         android:id="@+id/eventsEmptyText"
         android:layout_width="match_parent"
