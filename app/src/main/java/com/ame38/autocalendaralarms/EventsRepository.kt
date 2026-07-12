@@ -20,15 +20,20 @@ object EventsRepository {
             CalendarContract.Instances.CALENDAR_ID
         )
 
+        if (selectedIds.isEmpty()) return events
+
         val builder = CalendarContract.Instances.CONTENT_URI.buildUpon()
         ContentUris.appendId(builder, now)
         ContentUris.appendId(builder, end)
 
+        val selection = "${CalendarContract.Instances.CALENDAR_ID} IN (${selectedIds.joinToString(",") { "?" }})"
+        val selectionArgs = selectedIds.toTypedArray()
+
         context.contentResolver.query(
             builder.build(),
             projection,
-            null,
-            null,
+            selection,
+            selectionArgs,
             "${CalendarContract.Instances.BEGIN} ASC"
         )?.use { cursor ->
             val idIndex = cursor.getColumnIndex(CalendarContract.Instances.EVENT_ID)
@@ -38,7 +43,6 @@ object EventsRepository {
 
             while (cursor.moveToNext()) {
                 val calendarId = cursor.getLong(calendarIdIndex)
-                if (!selectedIds.contains(calendarId.toString())) continue
 
                 events.add(
                     EventEntry(
