@@ -7,6 +7,7 @@ private const val KEY_SELECTED_IDS = "selected_calendar_ids"
 private const val KEY_LEAD_TIME_MINUTES = "lead_time_minutes"
 private const val DEFAULT_LEAD_TIME_MINUTES = 15
 private const val KEY_SCHEDULED_EVENT_IDS = "scheduled_event_ids"
+private const val KEY_EXCLUDED_EVENT_IDS = "excluded_event_ids"
 
 object CalendarPrefs {
 
@@ -47,5 +48,29 @@ object CalendarPrefs {
     fun setScheduledEventIds(context: Context, ids: Set<String>) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putStringSet(KEY_SCHEDULED_EVENT_IDS, ids).apply()
+    }
+
+    fun getExcludedEventIds(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet(KEY_EXCLUDED_EVENT_IDS, emptySet()) ?: emptySet()
+    }
+
+    fun setExcludedEventIds(context: Context, ids: Set<String>) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(KEY_EXCLUDED_EVENT_IDS, ids).apply()
+    }
+
+    fun setEventExcluded(context: Context, eventId: Long, excluded: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = prefs.getStringSet(KEY_EXCLUDED_EVENT_IDS, emptySet())?.toMutableSet() ?: mutableSetOf()
+        val idString = eventId.toString()
+
+        if (excluded) {
+            current.add(idString)
+        } else {
+            current.remove(idString)
+        }
+
+        prefs.edit().putStringSet(KEY_EXCLUDED_EVENT_IDS, current).apply()
     }
 }
