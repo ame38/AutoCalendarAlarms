@@ -11,10 +11,13 @@ object AlarmScheduler {
     fun scheduleAlarms(context: Context, events: List<EventEntry>): Int {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val leadTimeMillis = CalendarPrefs.getLeadTimeMinutes(context) * 60 * 1000L
+        val excludedIds = CalendarPrefs.getExcludedEventIds(context)
         var scheduledCount = 0
         val newIds = mutableSetOf<String>()
 
         for (event in events) {
+            if (event.id.toString() in excludedIds) continue
+
             val triggerAt = event.beginTime - leadTimeMillis
             if (triggerAt <= System.currentTimeMillis()) continue
 
@@ -30,6 +33,23 @@ object AlarmScheduler {
         CalendarPrefs.setScheduledEventIds(context, newIds)
 
         return scheduledCount
+    }
+
+    // reschedules just one event, e.g. when the user flips it back on from the
+    // events list, without touching the alarms already set for everything else
+    fun scheduleSingleAlarm(context: Context, event: EventEntry): Boolean {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val leadTimeMillis = CalendarPrefs.getLeadTimeMinutes(context) * 60 * 1000L
+        val triggerAt = event.beginTime - leadTimeMillis
+        if (triggerAt <= System.currentTimeMillis()) return false
+
+        scheduleAlarm(context, alarmManager, event, triggerAt)
+
+        val ids = CalendarPrefs.getScheduledEventIds(context).toMutableSet()
+        ids.add(event.id.toString())
+        CalendarPrefs.setScheduledEventIds(context, ids)
+
+        return true
     }
 
     fun cancelAlarm(context: Context, eventId: Long) {
