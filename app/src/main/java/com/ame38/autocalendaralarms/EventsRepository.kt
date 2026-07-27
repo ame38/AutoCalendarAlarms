@@ -17,7 +17,9 @@ object EventsRepository {
             CalendarContract.Instances.EVENT_ID,
             CalendarContract.Instances.TITLE,
             CalendarContract.Instances.BEGIN,
-            CalendarContract.Instances.CALENDAR_ID
+            CalendarContract.Instances.CALENDAR_ID,
+            CalendarContract.Instances.EVENT_COLOR,
+            CalendarContract.Instances.CALENDAR_COLOR
         )
 
         if (selectedIds.isEmpty()) return events
@@ -40,16 +42,25 @@ object EventsRepository {
             val titleIndex = cursor.getColumnIndex(CalendarContract.Instances.TITLE)
             val beginIndex = cursor.getColumnIndex(CalendarContract.Instances.BEGIN)
             val calendarIdIndex = cursor.getColumnIndex(CalendarContract.Instances.CALENDAR_ID)
+            val eventColorIndex = cursor.getColumnIndex(CalendarContract.Instances.EVENT_COLOR)
+            val calendarColorIndex = cursor.getColumnIndex(CalendarContract.Instances.CALENDAR_COLOR)
 
             while (cursor.moveToNext()) {
                 val calendarId = cursor.getLong(calendarIdIndex)
+
+                // an event can override the calendar's color in google calendar, falls
+                // back to the calendar color when it hasn't been given its own
+                val eventColor = cursor.getInt(eventColorIndex)
+                val calendarColor = cursor.getInt(calendarColorIndex)
+                val color = if (eventColor != 0) eventColor else calendarColor
 
                 events.add(
                     EventEntry(
                         id = cursor.getLong(idIndex),
                         title = cursor.getString(titleIndex) ?: "",
                         beginTime = cursor.getLong(beginIndex),
-                        calendarId = calendarId
+                        calendarId = calendarId,
+                        color = color
                     )
                 )
             }
