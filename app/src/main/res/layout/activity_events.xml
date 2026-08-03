@@ -21,6 +21,22 @@
         android:text="@string/refresh_events"
         android:layout_marginBottom="16dp" />
 
+    <HorizontalScrollView
+        android:id="@+id/colorFilterScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/colorFilterRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
     <TextView
         android:id="@+id/eventsEmptyText"
         android:layout_width="match_parent"
