@@ -1,11 +1,15 @@
 package com.ame38.autocalendaralarms
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.CalendarContract
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.RadioGroup
@@ -66,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         requestNotificationPermissionIfNeeded()
+        requestBatteryOptimizationExemptionIfNeeded()
 
         SyncScheduler.schedulePeriodicSync(this)
     }
@@ -78,6 +83,18 @@ class MainActivity : AppCompatActivity() {
         ) {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    // so the periodic sync doesn't get killed off by doze/app standby, only
+    // asks once since isIgnoringBatteryOptimizations is already true after that
+    private fun requestBatteryOptimizationExemptionIfNeeded() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) return
+
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:$packageName")
+        }
+        startActivity(intent)
     }
 
     private fun setupLeadTimeOptions() {
