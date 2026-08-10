@@ -8,7 +8,8 @@ private const val KEY_LEAD_TIME_MINUTES = "lead_time_minutes"
 private const val DEFAULT_LEAD_TIME_MINUTES = 15
 private const val KEY_SCHEDULED_EVENT_IDS = "scheduled_event_ids"
 private const val KEY_EXCLUDED_EVENT_IDS = "excluded_event_ids"
-private const val KEY_EXCLUDED_COLORS = "excluded_colors"
+private const val KEY_EXCLUDED_ACCOUNT_COLORS = "excluded_account_colors"
+private const val ACCOUNT_COLOR_SEPARATOR = "|"
 
 object CalendarPrefs {
 
@@ -76,24 +77,25 @@ object CalendarPrefs {
     }
 
     // nothing excluded by default, color filtering is opt in on top of the
-    // calendars the user already picked
-    fun getExcludedColors(context: Context): Set<Int> {
+    // calendars the user already picked. Scoped per account since the same
+    // color int can mean something different in two different accounts.
+    fun isAccountColorExcluded(context: Context, accountName: String, color: Int): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val stored = prefs.getStringSet(KEY_EXCLUDED_COLORS, emptySet()) ?: emptySet()
-        return stored.mapNotNull { it.toIntOrNull() }.toSet()
+        val stored = prefs.getStringSet(KEY_EXCLUDED_ACCOUNT_COLORS, emptySet()) ?: emptySet()
+        return "$accountName$ACCOUNT_COLOR_SEPARATOR$color" in stored
     }
 
-    fun setColorExcluded(context: Context, color: Int, excluded: Boolean) {
+    fun setAccountColorExcluded(context: Context, accountName: String, color: Int, excluded: Boolean) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val current = prefs.getStringSet(KEY_EXCLUDED_COLORS, emptySet())?.toMutableSet() ?: mutableSetOf()
-        val colorString = color.toString()
+        val current = prefs.getStringSet(KEY_EXCLUDED_ACCOUNT_COLORS, emptySet())?.toMutableSet() ?: mutableSetOf()
+        val key = "$accountName$ACCOUNT_COLOR_SEPARATOR$color"
 
         if (excluded) {
-            current.add(colorString)
+            current.add(key)
         } else {
-            current.remove(colorString)
+            current.remove(key)
         }
 
-        prefs.edit().putStringSet(KEY_EXCLUDED_COLORS, current).apply()
+        prefs.edit().putStringSet(KEY_EXCLUDED_ACCOUNT_COLORS, current).apply()
     }
 }

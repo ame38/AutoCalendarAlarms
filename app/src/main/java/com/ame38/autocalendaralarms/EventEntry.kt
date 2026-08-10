@@ -5,5 +5,7 @@ data class EventEntry(
     val title: String,
     val beginTime: Long,
     val calendarId: Long,
+    val calendarDisplayName: String,
+    val accountName: String,
     val color: Int
 )
