@@ -9,8 +9,17 @@
     <string name="view_upcoming_events">View upcoming events</string>
     <string name="lead_time_label">Alert me before events:</string>
     <string name="lead_time_5">5 min</string>
+    <string name="lead_time_10">10 min</string>
     <string name="lead_time_15">15 min</string>
     <string name="lead_time_30">30 min</string>
     <string name="lead_time_60">1 hour</string>
     <string name="alarm_checkbox_label">Alarm</string>
+    <string name="back">Back</string>
+    <string name="expand_account">Show sub-calendars and colors</string>
+    <string name="tab_sub_calendars">Sub-calendars</string>
+    <string name="tab_colors">Colors</string>
+    <string name="color_checkbox_label">Included</string>
+    <string name="sub_calendars_filter_label">Sub-calendars (tap to hide from this list)</string>
+    <string name="colors_filter_label">Colors (tap to hide from this list)</string>
+    <string name="filter_disclaimer">Hiding a sub-calendar or color below only changes what\'s shown here — their alarms stay on. To stop alarms for a whole category, use the main screen instead.</string>
 </resources>
