@@ -1,6 +1,7 @@
 package com.ame38.autocalendaralarms
 
 import android.Manifest
+import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,8 +13,10 @@ import android.provider.CalendarContract
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -51,6 +54,10 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, EventsActivity::class.java))
         }
 
+        findViewById<ImageButton>(R.id.refreshButton).setOnClickListener {
+            forceSync()
+        }
+
         permissionText = findViewById(R.id.permissionText)
         permissionText.setOnClickListener {
             requestPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
@@ -70,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         requestNotificationPermissionIfNeeded()
+        requestExactAlarmPermissionIfNeeded()
         requestBatteryOptimizationExemptionIfNeeded()
 
         SyncScheduler.schedulePeriodicSync(this)
@@ -83,6 +91,21 @@ class MainActivity : AppCompatActivity() {
         ) {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    // without this, alarms silently fall back to AlarmManager.set() which doze/app
+    // standby can delay by a long, unpredictable margin - which is why alarms can
+    // appear to "not go off". Asking up front avoids that fallback entirely.
+    private fun requestExactAlarmPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (alarmManager.canScheduleExactAlarms()) return
+
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+            data = Uri.parse("package:$packageName")
+        }
+        startActivity(intent)
     }
 
     // so the periodic sync doesn't get killed off by doze/app standby, only
@@ -100,6 +123,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupLeadTimeOptions() {
         val checkedId = when (CalendarPrefs.getLeadTimeMinutes(this)) {
             5 -> R.id.leadTime5
+            10 -> R.id.leadTime10
             30 -> R.id.leadTime30
             60 -> R.id.leadTime60
             else -> R.id.leadTime15
@@ -109,11 +133,13 @@ class MainActivity : AppCompatActivity() {
         leadTimeGroup.setOnCheckedChangeListener { _, checkedId ->
             val minutes = when (checkedId) {
                 R.id.leadTime5 -> 5
+                R.id.leadTime10 -> 10
                 R.id.leadTime30 -> 30
                 R.id.leadTime60 -> 60
                 else -> 15
             }
             CalendarPrefs.setLeadTimeMinutes(this, minutes)
+            forceSync()
         }
     }
 
@@ -133,8 +159,20 @@ class MainActivity : AppCompatActivity() {
         } else {
             emptyText.visibility = View.GONE
             calendarList.visibility = View.VISIBLE
-            calendarList.adapter = CalendarAdapter(calendars)
+            calendarList.adapter = AccountAdapter(calendars.groupByAccount()) { forceSync() }
         }
+    }
+
+    // sub-calendar and color choices here are what actually control which events
+    // get an alarm, so every change needs to immediately re-run scheduling
+    private fun forceSync() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val count = EventSync.resync(this)
+        Toast.makeText(this, "$count alarms set", Toast.LENGTH_SHORT).show()
     }
 
     private fun queryCalendars(): List<CalendarEntry> {
@@ -143,7 +181,8 @@ class MainActivity : AppCompatActivity() {
         val projection = arrayOf(
             CalendarContract.Calendars._ID,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
-            CalendarContract.Calendars.ACCOUNT_NAME
+            CalendarContract.Calendars.ACCOUNT_NAME,
+            CalendarContract.Calendars.CALENDAR_COLOR
         )
 
         contentResolver.query(
@@ -156,6 +195,7 @@ class MainActivity : AppCompatActivity() {
             val idIndex = cursor.getColumnIndex(CalendarContract.Calendars._ID)
             val nameIndex = cursor.getColumnIndex(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
             val accountIndex = cursor.getColumnIndex(CalendarContract.Calendars.ACCOUNT_NAME)
+            val colorIndex = cursor.getColumnIndex(CalendarContract.Calendars.CALENDAR_COLOR)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idIndex)
@@ -164,6 +204,7 @@ class MainActivity : AppCompatActivity() {
                         id = id,
                         displayName = cursor.getString(nameIndex) ?: "",
                         accountName = cursor.getString(accountIndex) ?: "",
+                        color = cursor.getInt(colorIndex),
                         isChecked = selectedIds.contains(id.toString())
                     )
                 )
