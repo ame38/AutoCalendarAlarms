@@ -16,8 +16,10 @@ class EventAdapter(private val events: List<EventEntry>) :
     private val dateFormat = SimpleDateFormat("EEE, MMM d 'at' h:mm a", Locale.getDefault())
 
     class EventViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val colorBar: View = view.findViewById(R.id.eventColorBar)
         val titleText: TextView = view.findViewById(R.id.eventTitleText)
         val timeText: TextView = view.findViewById(R.id.eventTimeText)
+        val calendarText: TextView = view.findViewById(R.id.eventCalendarText)
         val alarmCheckBox: CheckBox = view.findViewById(R.id.eventAlarmCheckBox)
     }
 
@@ -32,6 +34,8 @@ class EventAdapter(private val events: List<EventEntry>) :
         val context = holder.itemView.context
         holder.titleText.text = event.title
         holder.timeText.text = dateFormat.format(Date(event.beginTime))
+        holder.calendarText.text = event.calendarDisplayName
+        holder.colorBar.setBackgroundColor(event.color)
 
         val isExcluded = CalendarPrefs.getExcludedEventIds(context).contains(event.id.toString())
 
