@@ -66,6 +66,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         requestNotificationPermissionIfNeeded()
+
+        SyncScheduler.schedulePeriodicSync(this)
     }
 
     private fun requestNotificationPermissionIfNeeded() {
