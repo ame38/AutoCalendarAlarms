@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun queryCalendars(): List<CalendarEntry> {
         val calendars = mutableListOf<CalendarEntry>()
+        val selectedIds = CalendarPrefs.getSelectedIds(this)
         val projection = arrayOf(
             CalendarContract.Calendars._ID,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
@@ -90,11 +91,13 @@ class MainActivity : AppCompatActivity() {
             val accountIndex = cursor.getColumnIndex(CalendarContract.Calendars.ACCOUNT_NAME)
 
             while (cursor.moveToNext()) {
+                val id = cursor.getLong(idIndex)
                 calendars.add(
                     CalendarEntry(
-                        id = cursor.getLong(idIndex),
+                        id = id,
                         displayName = cursor.getString(nameIndex) ?: "",
-                        accountName = cursor.getString(accountIndex) ?: ""
+                        accountName = cursor.getString(accountIndex) ?: "",
+                        isChecked = selectedIds.contains(id.toString())
                     )
                 )
             }
