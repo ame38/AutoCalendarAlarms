@@ -92,8 +92,11 @@ class EventsActivity : AppCompatActivity() {
             return
         }
 
-        val events = EventsRepository.queryUpcomingEvents(this, selectedIds)
-        setupColorFilter(events)
+        val allEvents = EventsRepository.queryUpcomingEvents(this, selectedIds)
+        setupColorFilter(allEvents)
+
+        val excludedColors = CalendarPrefs.getExcludedColors(this)
+        val events = allEvents.filter { it.color !in excludedColors }
 
         if (events.isEmpty()) {
             showEmpty(getString(R.string.no_upcoming_events))
