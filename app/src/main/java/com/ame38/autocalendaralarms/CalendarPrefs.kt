@@ -8,6 +8,7 @@ private const val KEY_LEAD_TIME_MINUTES = "lead_time_minutes"
 private const val DEFAULT_LEAD_TIME_MINUTES = 15
 private const val KEY_SCHEDULED_EVENT_IDS = "scheduled_event_ids"
 private const val KEY_EXCLUDED_EVENT_IDS = "excluded_event_ids"
+private const val KEY_EXCLUDED_COLORS = "excluded_colors"
 
 object CalendarPrefs {
 
@@ -72,5 +73,27 @@ object CalendarPrefs {
         }
 
         prefs.edit().putStringSet(KEY_EXCLUDED_EVENT_IDS, current).apply()
+    }
+
+    // nothing excluded by default, color filtering is opt in on top of the
+    // calendars the user already picked
+    fun getExcludedColors(context: Context): Set<Int> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val stored = prefs.getStringSet(KEY_EXCLUDED_COLORS, emptySet()) ?: emptySet()
+        return stored.mapNotNull { it.toIntOrNull() }.toSet()
+    }
+
+    fun setColorExcluded(context: Context, color: Int, excluded: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = prefs.getStringSet(KEY_EXCLUDED_COLORS, emptySet())?.toMutableSet() ?: mutableSetOf()
+        val colorString = color.toString()
+
+        if (excluded) {
+            current.add(colorString)
+        } else {
+            current.remove(colorString)
+        }
+
+        prefs.edit().putStringSet(KEY_EXCLUDED_COLORS, current).apply()
     }
 }
