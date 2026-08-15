@@ -6,6 +6,7 @@ private const val PREFS_NAME = "calendar_prefs"
 private const val KEY_SELECTED_IDS = "selected_calendar_ids"
 private const val KEY_LEAD_TIME_MINUTES = "lead_time_minutes"
 private const val DEFAULT_LEAD_TIME_MINUTES = 15
+private const val KEY_SCHEDULED_EVENT_IDS = "scheduled_event_ids"
 
 object CalendarPrefs {
 
@@ -36,5 +37,15 @@ object CalendarPrefs {
     fun setLeadTimeMinutes(context: Context, minutes: Int) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putInt(KEY_LEAD_TIME_MINUTES, minutes).apply()
+    }
+
+    fun getScheduledEventIds(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet(KEY_SCHEDULED_EVENT_IDS, emptySet()) ?: emptySet()
+    }
+
+    fun setScheduledEventIds(context: Context, ids: Set<String>) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(KEY_SCHEDULED_EVENT_IDS, ids).apply()
     }
 }
