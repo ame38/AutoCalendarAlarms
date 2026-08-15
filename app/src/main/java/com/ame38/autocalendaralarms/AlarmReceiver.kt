@@ -1,5 +1,6 @@
 package com.ame38.autocalendaralarms
 
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -14,11 +15,19 @@ class AlarmReceiver : BroadcastReceiver() {
 
         NotificationHelper.ensureChannel(context)
 
+        val contentIntent = PendingIntent.getActivity(
+            context,
+            eventId.toInt(),
+            Intent(context, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, NotificationHelper.CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Upcoming event")
             .setContentText(title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .build()
 
