@@ -8,8 +8,17 @@ set reminders by hand every time.
 
 You'll need an Android device or emulator with some calendars synced to it
 (a Google account works fine). There's no Play Store listing, but there's a
-built apk on the [releases page](https://github.com/ame38/AutoCalendarAlarms/releases)
-you can just sideload, or clone the repo and run it from Android Studio yourself.
+built apk on the [releases page](https://github.com/ame38/AutoCalendarAlarms/releases).
+
+To actually get it on your phone: open that releases page in your phone's
+browser, download the apk, then open it from your downloads/notifications
+to install. Android will probably block it the first time and ask you to
+allow installs from that source (Chrome, Files, whatever you used) — say
+yes, then go back and open the download again to install it. If you'd
+rather use adb, `adb install AutoCalendarAlarms-0.0.0.apk` works too once
+it's on your machine.
+
+Or just clone the repo and run it from Android Studio yourself.
 
 First launch it'll ask for calendar read permission (to see your events) and
 notification permission (to actually show you the alarm). Both are needed
