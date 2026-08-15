@@ -33,6 +33,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .build()
 
         val canNotify = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
