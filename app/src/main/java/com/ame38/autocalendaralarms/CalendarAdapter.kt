@@ -31,6 +31,7 @@ class CalendarAdapter(private val calendars: List<CalendarEntry>) :
         holder.checkBox.isChecked = calendar.isChecked
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
             calendar.isChecked = isChecked
+            CalendarPrefs.setSelected(holder.itemView.context, calendar.id, isChecked)
         }
     }
 
