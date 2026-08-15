@@ -12,4 +12,5 @@
     <string name="lead_time_15">15 min</string>
     <string name="lead_time_30">30 min</string>
     <string name="lead_time_60">1 hour</string>
+    <string name="alarm_checkbox_label">Alarm</string>
 </resources>
