@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.provider.CalendarContract
 import android.view.View
 import android.widget.Button
+import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var calendarList: RecyclerView
     private lateinit var permissionText: TextView
     private lateinit var emptyText: TextView
+    private lateinit var leadTimeGroup: RadioGroup
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -52,6 +54,9 @@ class MainActivity : AppCompatActivity() {
 
         emptyText = findViewById(R.id.emptyText)
 
+        leadTimeGroup = findViewById(R.id.leadTimeGroup)
+        setupLeadTimeOptions()
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR)
             == PackageManager.PERMISSION_GRANTED
         ) {
@@ -70,6 +75,26 @@ class MainActivity : AppCompatActivity() {
             != PackageManager.PERMISSION_GRANTED
         ) {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun setupLeadTimeOptions() {
+        val checkedId = when (CalendarPrefs.getLeadTimeMinutes(this)) {
+            5 -> R.id.leadTime5
+            30 -> R.id.leadTime30
+            60 -> R.id.leadTime60
+            else -> R.id.leadTime15
+        }
+        leadTimeGroup.check(checkedId)
+
+        leadTimeGroup.setOnCheckedChangeListener { _, checkedId ->
+            val minutes = when (checkedId) {
+                R.id.leadTime5 -> 5
+                R.id.leadTime30 -> 30
+                R.id.leadTime60 -> 60
+                else -> 15
+            }
+            CalendarPrefs.setLeadTimeMinutes(this, minutes)
         }
     }
 
