@@ -2,4 +2,8 @@
     <string name="app_name">Auto Calendar Alarms</string>
     <string name="calendar_permission_denied">Calendar permission is needed to show your calendars. Tap to try again.</string>
     <string name="no_calendars_found">No calendars found on this device.</string>
+    <string name="upcoming_events_title">Upcoming Events</string>
+    <string name="no_calendars_selected">Pick some calendars first on the main screen.</string>
+    <string name="no_upcoming_events">No upcoming events in the next 30 days.</string>
+    <string name="view_upcoming_events">View upcoming events</string>
 </resources>

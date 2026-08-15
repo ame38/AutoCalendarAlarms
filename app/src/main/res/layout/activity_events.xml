@@ -6,37 +6,22 @@
     android:padding="24dp">
 
     <TextView
-        android:id="@+id/titleText"
+        android:id="@+id/eventsTitleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
+        android:text="@string/upcoming_events_title"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/viewEventsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/view_upcoming_events"
-        android:layout_marginBottom="16dp" />
-
     <TextView
-        android:id="@+id/permissionText"
+        android:id="@+id/eventsEmptyText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/calendar_permission_denied"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/emptyText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/no_calendars_found"
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/calendarList"
+        android:id="@+id/eventsList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
