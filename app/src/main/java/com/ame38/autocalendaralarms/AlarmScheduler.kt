@@ -12,16 +12,41 @@ object AlarmScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val leadTimeMillis = CalendarPrefs.getLeadTimeMinutes(context) * 60 * 1000L
         var scheduledCount = 0
+        val newIds = mutableSetOf<String>()
 
         for (event in events) {
             val triggerAt = event.beginTime - leadTimeMillis
             if (triggerAt <= System.currentTimeMillis()) continue
 
             scheduleAlarm(context, alarmManager, event, triggerAt)
+            newIds.add(event.id.toString())
             scheduledCount++
         }
 
+        val staleIds = CalendarPrefs.getScheduledEventIds(context) - newIds
+        for (staleId in staleIds) {
+            cancelAlarm(context, staleId.toLong())
+        }
+        CalendarPrefs.setScheduledEventIds(context, newIds)
+
         return scheduledCount
+    }
+
+    fun cancelAlarm(context: Context, eventId: Long) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            eventId.toInt(),
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        if (pendingIntent != null) {
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
+        }
     }
 
     private fun scheduleAlarm(

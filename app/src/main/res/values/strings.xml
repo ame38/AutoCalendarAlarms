@@ -5,6 +5,7 @@
     <string name="upcoming_events_title">Upcoming Events</string>
     <string name="no_calendars_selected">Pick some calendars first on the main screen.</string>
     <string name="no_upcoming_events">No upcoming events in the next 30 days.</string>
+    <string name="refresh_events">Refresh</string>
     <string name="view_upcoming_events">View upcoming events</string>
     <string name="lead_time_label">Alert me before events:</string>
     <string name="lead_time_5">5 min</string>

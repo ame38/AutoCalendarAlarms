@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,10 @@ class EventsActivity : AppCompatActivity() {
         eventsList = findViewById(R.id.eventsList)
         eventsList.layoutManager = LinearLayoutManager(this)
         emptyText = findViewById(R.id.eventsEmptyText)
+
+        findViewById<Button>(R.id.refreshButton).setOnClickListener {
+            loadEvents()
+        }
 
         loadEvents()
     }
