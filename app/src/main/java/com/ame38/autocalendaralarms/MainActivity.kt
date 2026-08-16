@@ -273,11 +273,17 @@ class MainActivity : AppCompatActivity() {
             val events = EventsRepository.queryUpcomingEvents(this, allIds)
             val countsByCalendar = events.groupingBy { it.calendarId }.eachCount()
             val countsByAccountColor = events.groupingBy { it.accountName to it.color }.eachCount()
+            // the actual colors in use per account, straight from events (which can
+            // carry a per-event color override) rather than each calendar's base
+            // color - this is what the "Colors" tab and the events screen both filter on
+            val colorsByAccount = events.groupBy { it.accountName }
+                .mapValues { (_, accountEvents) -> accountEvents.map { it.color }.distinct() }
 
             calendarList.adapter = AccountAdapter(
                 calendars.groupByAccount(),
                 countsByCalendar,
-                countsByAccountColor
+                countsByAccountColor,
+                colorsByAccount
             ) { forceSync() }
         }
     }

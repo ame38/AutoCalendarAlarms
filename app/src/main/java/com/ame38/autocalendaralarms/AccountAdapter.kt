@@ -16,6 +16,7 @@ class AccountAdapter(
     private val accounts: List<AccountGroup>,
     private val eventCountsByCalendar: Map<Long, Int>,
     private val eventCountsByAccountColor: Map<Pair<String, Int>, Int>,
+    private val colorsByAccount: Map<String, List<Int>>,
     private val onChanged: () -> Unit
 ) : RecyclerView.Adapter<AccountAdapter.AccountViewHolder>() {
 
@@ -52,6 +53,15 @@ class AccountAdapter(
             for (calendar in group.calendars) {
                 calendar.isChecked = isChecked
                 CalendarPrefs.setSelected(context, calendar.id, isChecked)
+            }
+            if (isChecked) {
+                // re-enabling the whole account should restore every color too,
+                // not leave it silently filtered by exclusions from before it was
+                // turned off - matches the sub-calendar checkboxes above, which
+                // all come back checked
+                for (color in colorsByAccount[group.accountName].orEmpty()) {
+                    CalendarPrefs.setAccountColorExcluded(context, group.accountName, color, false)
+                }
             }
             onChanged()
             // the checklist below (if expanded) was built from the old isChecked
@@ -119,7 +129,11 @@ class AccountAdapter(
     private fun buildColorChecklist(holder: AccountViewHolder, group: AccountGroup) {
         val context = holder.itemView.context
         val container = holder.checklistContainer
-        val distinctColors = group.calendars.map { it.color }.distinct()
+        // the colors actually used by this account's upcoming events (including
+        // per-event overrides), not just each calendar's base color - this is
+        // the same set the events screen filters on, and the only set that lets
+        // every event actually be excluded via a checkbox here
+        val distinctColors = colorsByAccount[group.accountName].orEmpty()
         val swatchSize = (16 * context.resources.displayMetrics.density).toInt()
 
         for (color in distinctColors) {
@@ -141,7 +155,7 @@ class AccountAdapter(
 
             val count = eventCountsByAccountColor[group.accountName to color] ?: 0
             val checkBox = CheckBox(context).apply {
-                text = "${context.getString(R.string.color_checkbox_label)} ($count)"
+                text = "${googleColorName(color)} ($count)"
                 isChecked = !CalendarPrefs.isAccountColorExcluded(context, group.accountName, color)
                 setOnCheckedChangeListener { _, isChecked ->
                     CalendarPrefs.setAccountColorExcluded(context, group.accountName, color, !isChecked)
