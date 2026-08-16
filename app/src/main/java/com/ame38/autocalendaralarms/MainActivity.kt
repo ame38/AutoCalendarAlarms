@@ -40,6 +40,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 showPermissionDenied()
             }
+            // only start the notification/exact-alarm/etc. chain once this dialog
+            // is actually resolved - firing it alongside this one meant Android
+            // silently dropped the second dialog until the app was relaunched
+            requestNotificationPermissionIfNeeded()
         }
 
     // chained straight off the previous step's own callback rather than firing
@@ -114,11 +118,12 @@ class MainActivity : AppCompatActivity() {
             == PackageManager.PERMISSION_GRANTED
         ) {
             loadCalendars()
+            requestNotificationPermissionIfNeeded()
         } else {
+            // the notification/exact-alarm/etc. chain is kicked off from this
+            // launcher's own callback instead, once the calendar dialog resolves
             requestPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
         }
-
-        requestNotificationPermissionIfNeeded()
 
         SyncScheduler.schedulePeriodicSync(this)
     }
