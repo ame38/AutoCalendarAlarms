@@ -39,9 +39,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    // just so alarms can actually show a notification, we don't do anything special if denied
+    // chained straight off the previous step's own callback rather than firing
+    // all three requests back to back in onCreate - starting the exact-alarm or
+    // battery settings screen while the notification dialog is still resolving
+    // can cancel that dialog before the user's tap actually takes effect
     private val requestNotificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            requestExactAlarmPermissionIfNeeded()
+        }
+
+    private val requestExactAlarmSettingsLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            requestBatteryOptimizationExemptionIfNeeded()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,19 +87,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         requestNotificationPermissionIfNeeded()
-        requestExactAlarmPermissionIfNeeded()
-        requestBatteryOptimizationExemptionIfNeeded()
 
         SyncScheduler.schedulePeriodicSync(this)
     }
 
     private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            requestExactAlarmPermissionIfNeeded()
+            return
+        }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            requestExactAlarmPermissionIfNeeded()
         }
     }
 
@@ -97,15 +110,21 @@ class MainActivity : AppCompatActivity() {
     // standby can delay by a long, unpredictable margin - which is why alarms can
     // appear to "not go off". Asking up front avoids that fallback entirely.
     private fun requestExactAlarmPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            requestBatteryOptimizationExemptionIfNeeded()
+            return
+        }
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        if (alarmManager.canScheduleExactAlarms()) return
+        if (alarmManager.canScheduleExactAlarms()) {
+            requestBatteryOptimizationExemptionIfNeeded()
+            return
+        }
 
         val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
             data = Uri.parse("package:$packageName")
         }
-        startActivity(intent)
+        requestExactAlarmSettingsLauncher.launch(intent)
     }
 
     // so the periodic sync doesn't get killed off by doze/app standby, only

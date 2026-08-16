@@ -1,5 +1,6 @@
 package com.ame38.autocalendaralarms
 
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,6 +36,11 @@ class EventAdapter(private val events: List<EventEntry>) :
         holder.titleText.text = event.title
         holder.timeText.text = dateFormat.format(Date(event.beginTime))
         holder.calendarText.text = event.calendarDisplayName
+        holder.calendarText.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 8 * context.resources.displayMetrics.density
+            setColor(calendarTagColor(event.calendarId))
+        }
         holder.colorBar.setBackgroundColor(event.color)
 
         val isExcluded = CalendarPrefs.getExcludedEventIds(context).contains(event.id.toString())

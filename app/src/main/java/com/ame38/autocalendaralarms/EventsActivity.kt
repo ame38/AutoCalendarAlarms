@@ -2,10 +2,10 @@ package com.ame38.autocalendaralarms
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -50,7 +50,7 @@ class EventsActivity : AppCompatActivity() {
         colorFilterScroll = findViewById(R.id.colorFilterScroll)
         colorFilterRow = findViewById(R.id.colorFilterRow)
 
-        findViewById<Button>(R.id.backButton).setOnClickListener {
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
             finish()
         }
 
@@ -83,11 +83,12 @@ class EventsActivity : AppCompatActivity() {
         for ((calendarId, displayName) in distinctCalendars) {
             val chip = TextView(this).apply {
                 text = displayName
+                setTextColor(Color.WHITE)
                 setPadding(chipPadding, chipPadding / 2, chipPadding, chipPadding / 2)
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
                     cornerRadius = chipPadding.toFloat()
-                    setColor(0xFFE0E0E0.toInt())
+                    setColor(calendarTagColor(calendarId))
                 }
                 alpha = if (calendarId in hiddenCalendarIds) 0.35f else 1f
             }
