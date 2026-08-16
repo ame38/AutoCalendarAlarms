@@ -37,6 +37,7 @@ class AlarmSoundService : Service() {
         startForeground(ALARM_NOTIFICATION_ID, buildNotification(eventId, title))
         startAlarmSound()
         startVibration()
+        launchAlarmActivity(eventId, title)
 
         handler.removeCallbacks(autoStopRunnable)
         handler.postDelayed(autoStopRunnable, AUTO_STOP_MILLIS)
@@ -44,11 +45,35 @@ class AlarmSoundService : Service() {
         return START_NOT_STICKY
     }
 
+    // called directly the moment the alarm starts - doesn't depend on
+    // POST_NOTIFICATIONS ever having been granted, unlike the notification's
+    // own Dismiss button and full-screen intent. Relies on the same brief
+    // background-activity-launch exemption that lets a broadcast triggered by
+    // AlarmManager kick off a foreground service that immediately shows UI.
+    private fun launchAlarmActivity(eventId: Long, title: String) {
+        val intent = Intent(this, AlarmActivity::class.java).apply {
+            putExtra(AlarmReceiver.EXTRA_EVENT_ID, eventId)
+            putExtra(AlarmReceiver.EXTRA_EVENT_TITLE, title)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            // background-start restrictions on some OEM/API combo - the
+            // notification's full-screen intent is the fallback for that
+        }
+    }
+
     private fun buildNotification(eventId: Long, title: String): Notification {
         val contentIntent = PendingIntent.getActivity(
             this,
             eventId.toInt(),
-            Intent(this, MainActivity::class.java),
+            Intent(this, AlarmActivity::class.java).apply {
+                putExtra(AlarmReceiver.EXTRA_EVENT_ID, eventId)
+                putExtra(AlarmReceiver.EXTRA_EVENT_TITLE, title)
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -154,6 +179,7 @@ class AlarmSoundService : Service() {
         mediaPlayer = null
         stopVibration()
         stopForeground(STOP_FOREGROUND_REMOVE)
+        AlarmActivity.finishIfShowing()
         super.onDestroy()
     }
 
@@ -161,6 +187,6 @@ class AlarmSoundService : Service() {
 
     companion object {
         const val ALARM_NOTIFICATION_ID = 999001
-        private const val AUTO_STOP_MILLIS = 2 * 60 * 1000L
+        private const val AUTO_STOP_MILLIS = 60 * 1000L
     }
 }

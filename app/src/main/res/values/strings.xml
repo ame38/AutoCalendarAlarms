@@ -17,6 +17,7 @@
     <string name="alarm_checkbox_label">Alarm</string>
     <string name="alarm_notification_title">Event alarm</string>
     <string name="dismiss_alarm">Dismiss</string>
+    <string name="stop_alarm">Stop Alarm</string>
     <string name="mute_all_label">Mute all alarms</string>
     <string name="ringtone_label">Alarm ringtone:</string>
     <string name="ringtone_default_label">Default</string>
