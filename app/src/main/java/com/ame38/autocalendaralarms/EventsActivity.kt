@@ -191,7 +191,7 @@ class EventsActivity : AppCompatActivity() {
         }
 
         if (visibleEvents.isEmpty()) {
-            showEmpty(getString(R.string.no_upcoming_events))
+            showEmpty(getString(R.string.no_upcoming_events, EventsRepository.UPCOMING_WINDOW_DAYS))
         } else {
             emptyText.visibility = View.GONE
             eventsList.visibility = View.VISIBLE

@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 // sub-calendars to include, or colors to exclude - never both, per account.
 class AccountAdapter(
     private val accounts: List<AccountGroup>,
+    private val eventCountsByCalendar: Map<Long, Int>,
+    private val eventCountsByAccountColor: Map<Pair<String, Int>, Int>,
     private val onChanged: () -> Unit
 ) : RecyclerView.Adapter<AccountAdapter.AccountViewHolder>() {
 
@@ -52,6 +54,9 @@ class AccountAdapter(
                 CalendarPrefs.setSelected(context, calendar.id, isChecked)
             }
             onChanged()
+            // the checklist below (if expanded) was built from the old isChecked
+            // values and won't redraw on its own - force a rebind so it matches
+            notifyItemChanged(holder.bindingAdapterPosition)
         }
 
         val isExpanded = group.accountName in expandedAccounts
@@ -81,8 +86,8 @@ class AccountAdapter(
         holder.checklistContainer.removeAllViews()
         if (isExpanded) {
             when (tab) {
-                Tab.SUB_CALENDARS -> buildSubCalendarChecklist(holder.checklistContainer, group, context)
-                Tab.COLORS -> buildColorChecklist(holder.checklistContainer, group, context)
+                Tab.SUB_CALENDARS -> buildSubCalendarChecklist(holder, group)
+                Tab.COLORS -> buildColorChecklist(holder, group)
             }
         }
     }
@@ -92,22 +97,28 @@ class AccountAdapter(
         tab.alpha = if (selected) 1f else 0.5f
     }
 
-    private fun buildSubCalendarChecklist(container: LinearLayout, group: AccountGroup, context: android.content.Context) {
+    private fun buildSubCalendarChecklist(holder: AccountViewHolder, group: AccountGroup) {
+        val context = holder.itemView.context
         for (calendar in group.calendars) {
+            val count = eventCountsByCalendar[calendar.id] ?: 0
             val row = CheckBox(context).apply {
-                text = calendar.displayName
+                text = "${calendar.displayName} ($count)"
                 isChecked = calendar.isChecked
                 setOnCheckedChangeListener { _, isChecked ->
                     calendar.isChecked = isChecked
                     CalendarPrefs.setSelected(context, calendar.id, isChecked)
                     onChanged()
+                    // keeps the master checkbox above in sync with this change
+                    notifyItemChanged(holder.bindingAdapterPosition)
                 }
             }
-            container.addView(row)
+            holder.checklistContainer.addView(row)
         }
     }
 
-    private fun buildColorChecklist(container: LinearLayout, group: AccountGroup, context: android.content.Context) {
+    private fun buildColorChecklist(holder: AccountViewHolder, group: AccountGroup) {
+        val context = holder.itemView.context
+        val container = holder.checklistContainer
         val distinctColors = group.calendars.map { it.color }.distinct()
         val swatchSize = (16 * context.resources.displayMetrics.density).toInt()
 
@@ -128,12 +139,14 @@ class AccountAdapter(
                 }
             }
 
+            val count = eventCountsByAccountColor[group.accountName to color] ?: 0
             val checkBox = CheckBox(context).apply {
-                text = context.getString(R.string.color_checkbox_label)
+                text = "${context.getString(R.string.color_checkbox_label)} ($count)"
                 isChecked = !CalendarPrefs.isAccountColorExcluded(context, group.accountName, color)
                 setOnCheckedChangeListener { _, isChecked ->
                     CalendarPrefs.setAccountColorExcluded(context, group.accountName, color, !isChecked)
                     onChanged()
+                    notifyItemChanged(holder.bindingAdapterPosition)
                 }
             }
 

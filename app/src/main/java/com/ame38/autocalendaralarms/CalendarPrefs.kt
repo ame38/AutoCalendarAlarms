@@ -10,6 +10,8 @@ private const val KEY_SCHEDULED_EVENT_IDS = "scheduled_event_ids"
 private const val KEY_EXCLUDED_EVENT_IDS = "excluded_event_ids"
 private const val KEY_EXCLUDED_ACCOUNT_COLORS = "excluded_account_colors"
 private const val ACCOUNT_COLOR_SEPARATOR = "|"
+private const val KEY_MUTED = "muted_all"
+private const val KEY_RINGTONE_URI = "alarm_ringtone_uri"
 
 object CalendarPrefs {
 
@@ -97,5 +99,29 @@ object CalendarPrefs {
         }
 
         prefs.edit().putStringSet(KEY_EXCLUDED_ACCOUNT_COLORS, current).apply()
+    }
+
+    // checked at the moment an alarm fires, not at scheduling time - so muting
+    // takes effect immediately for anything about to go off, and unmuting
+    // restores everything without needing a resync
+    fun isMuted(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_MUTED, false)
+    }
+
+    fun setMuted(context: Context, muted: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_MUTED, muted).apply()
+    }
+
+    // null means "use the device's default alarm ringtone"
+    fun getRingtoneUri(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_RINGTONE_URI, null)
+    }
+
+    fun setRingtoneUri(context: Context, uri: String?) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_RINGTONE_URI, uri).apply()
     }
 }

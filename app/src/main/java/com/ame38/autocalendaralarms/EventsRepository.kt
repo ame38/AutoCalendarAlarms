@@ -7,6 +7,10 @@ import java.util.Calendar
 
 object EventsRepository {
 
+    // single source of truth for how far ahead events are fetched, so the UI
+    // can display this instead of a hardcoded number that could drift from it
+    const val UPCOMING_WINDOW_DAYS = 30
+
     fun queryUpcomingEvents(context: Context, selectedIds: Set<String>): List<EventEntry> {
         val events = mutableListOf<EventEntry>()
         if (selectedIds.isEmpty()) return events
@@ -14,7 +18,7 @@ object EventsRepository {
         val accountNames = queryAccountNames(context)
 
         val now = Calendar.getInstance().timeInMillis
-        val end = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 30) }.timeInMillis
+        val end = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, UPCOMING_WINDOW_DAYS) }.timeInMillis
 
         val projection = arrayOf(
             CalendarContract.Instances.EVENT_ID,

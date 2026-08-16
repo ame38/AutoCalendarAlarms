@@ -2,9 +2,11 @@ package com.ame38.autocalendaralarms
 
 import android.Manifest
 import android.app.AlarmManager
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,6 +15,7 @@ import android.provider.CalendarContract
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -50,7 +53,19 @@ class MainActivity : AppCompatActivity() {
 
     private val requestExactAlarmSettingsLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            requestFullScreenIntentPermissionIfNeeded()
+        }
+
+    private val requestFullScreenIntentSettingsLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             requestBatteryOptimizationExemptionIfNeeded()
+        }
+
+    private val ringtonePickerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val uri = result.data?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            CalendarPrefs.setRingtoneUri(this, uri?.toString())
+            updateRingtoneLabel()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +82,23 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.refreshButton).setOnClickListener {
             forceSync()
         }
+
+        findViewById<TextView>(R.id.upcomingWindowText).text =
+            getString(R.string.upcoming_window_notice, EventsRepository.UPCOMING_WINDOW_DAYS)
+
+        findViewById<CheckBox>(R.id.muteAllCheckBox).apply {
+            isChecked = CalendarPrefs.isMuted(this@MainActivity)
+            setOnCheckedChangeListener { _, isChecked ->
+                CalendarPrefs.setMuted(this@MainActivity, isChecked)
+                if (isChecked) {
+                    // stop anything currently ringing too, not just future alarms
+                    stopService(Intent(this@MainActivity, AlarmSoundService::class.java))
+                }
+            }
+        }
+
+        findViewById<View>(R.id.ringtoneRow).setOnClickListener { openRingtonePicker() }
+        updateRingtoneLabel()
 
         permissionText = findViewById(R.id.permissionText)
         permissionText.setOnClickListener {
@@ -111,13 +143,13 @@ class MainActivity : AppCompatActivity() {
     // appear to "not go off". Asking up front avoids that fallback entirely.
     private fun requestExactAlarmPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            requestBatteryOptimizationExemptionIfNeeded()
+            requestFullScreenIntentPermissionIfNeeded()
             return
         }
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (alarmManager.canScheduleExactAlarms()) {
-            requestBatteryOptimizationExemptionIfNeeded()
+            requestFullScreenIntentPermissionIfNeeded()
             return
         }
 
@@ -125,6 +157,28 @@ class MainActivity : AppCompatActivity() {
             data = Uri.parse("package:$packageName")
         }
         requestExactAlarmSettingsLauncher.launch(intent)
+    }
+
+    // without this, the alarm notification can't wake the screen / show over
+    // the lock screen on Android 14+ - it'll still ring and vibrate (that's
+    // handled by the foreground service directly), but there'd be nothing to
+    // see or tap "Dismiss" on until the phone is unlocked
+    private fun requestFullScreenIntentPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            requestBatteryOptimizationExemptionIfNeeded()
+            return
+        }
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        if (notificationManager.canUseFullScreenIntent()) {
+            requestBatteryOptimizationExemptionIfNeeded()
+            return
+        }
+
+        val intent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+            data = Uri.parse("package:$packageName")
+        }
+        requestFullScreenIntentSettingsLauncher.launch(intent)
     }
 
     // so the periodic sync doesn't get killed off by doze/app standby, only
@@ -137,6 +191,35 @@ class MainActivity : AppCompatActivity() {
             data = Uri.parse("package:$packageName")
         }
         startActivity(intent)
+    }
+
+    private fun openRingtonePicker() {
+        val currentUri = CalendarPrefs.getRingtoneUri(this)?.let { Uri.parse(it) }
+            ?: RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM)
+
+        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, currentUri)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.ringtone_picker_title))
+        }
+        ringtonePickerLauncher.launch(intent)
+    }
+
+    private fun updateRingtoneLabel() {
+        val storedUri = CalendarPrefs.getRingtoneUri(this)
+        val name = if (storedUri == null) {
+            getString(R.string.ringtone_default_label)
+        } else {
+            try {
+                RingtoneManager.getRingtone(this, Uri.parse(storedUri))?.getTitle(this)
+                    ?: getString(R.string.ringtone_default_label)
+            } catch (e: Exception) {
+                getString(R.string.ringtone_default_label)
+            }
+        }
+        findViewById<TextView>(R.id.ringtoneNameText).text = name
     }
 
     private fun setupLeadTimeOptions() {
@@ -178,7 +261,19 @@ class MainActivity : AppCompatActivity() {
         } else {
             emptyText.visibility = View.GONE
             calendarList.visibility = View.VISIBLE
-            calendarList.adapter = AccountAdapter(calendars.groupByAccount()) { forceSync() }
+
+            // counted across every calendar, not just the ones currently picked,
+            // so the numbers help decide whether to turn a category on
+            val allIds = calendars.map { it.id.toString() }.toSet()
+            val events = EventsRepository.queryUpcomingEvents(this, allIds)
+            val countsByCalendar = events.groupingBy { it.calendarId }.eachCount()
+            val countsByAccountColor = events.groupingBy { it.accountName to it.color }.eachCount()
+
+            calendarList.adapter = AccountAdapter(
+                calendars.groupByAccount(),
+                countsByCalendar,
+                countsByAccountColor
+            ) { forceSync() }
         }
     }
 
