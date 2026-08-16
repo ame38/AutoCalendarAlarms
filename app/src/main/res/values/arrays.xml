@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="lead_time_labels">
+        <item>@string/lead_time_5</item>
+        <item>@string/lead_time_10</item>
+        <item>@string/lead_time_15</item>
+        <item>@string/lead_time_30</item>
+        <item>@string/lead_time_60</item>
+    </string-array>
+
+    <!-- minutes, parallel to lead_time_labels by index -->
+    <integer-array name="lead_time_minutes">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+    </integer-array>
+</resources>

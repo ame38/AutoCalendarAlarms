@@ -14,10 +14,12 @@ import android.os.PowerManager
 import android.provider.CalendarContract
 import android.provider.Settings
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageButton
-import android.widget.RadioGroup
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var calendarList: RecyclerView
     private lateinit var permissionText: TextView
     private lateinit var emptyText: TextView
-    private lateinit var leadTimeGroup: RadioGroup
+    private lateinit var leadTimeSpinner: Spinner
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -111,7 +113,7 @@ class MainActivity : AppCompatActivity() {
 
         emptyText = findViewById(R.id.emptyText)
 
-        leadTimeGroup = findViewById(R.id.leadTimeGroup)
+        leadTimeSpinner = findViewById(R.id.leadTimeSpinner)
         setupLeadTimeOptions()
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR)
@@ -228,25 +230,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupLeadTimeOptions() {
-        val checkedId = when (CalendarPrefs.getLeadTimeMinutes(this)) {
-            5 -> R.id.leadTime5
-            10 -> R.id.leadTime10
-            30 -> R.id.leadTime30
-            60 -> R.id.leadTime60
-            else -> R.id.leadTime15
+        val minutesOptions = resources.getIntArray(R.array.lead_time_minutes)
+        leadTimeSpinner.adapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.lead_time_labels,
+            android.R.layout.simple_spinner_item
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        leadTimeGroup.check(checkedId)
 
-        leadTimeGroup.setOnCheckedChangeListener { _, checkedId ->
-            val minutes = when (checkedId) {
-                R.id.leadTime5 -> 5
-                R.id.leadTime10 -> 10
-                R.id.leadTime30 -> 30
-                R.id.leadTime60 -> 60
-                else -> 15
+        // set the initial selection before attaching the listener below, so
+        // restoring the saved value doesn't itself trigger a resync
+        val currentMinutes = CalendarPrefs.getLeadTimeMinutes(this)
+        val initialIndex = minutesOptions.indexOf(currentMinutes).let { if (it == -1) 2 else it }
+        leadTimeSpinner.setSelection(initialIndex)
+
+        leadTimeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                CalendarPrefs.setLeadTimeMinutes(this@MainActivity, minutesOptions[position])
+                forceSync()
             }
-            CalendarPrefs.setLeadTimeMinutes(this, minutes)
-            forceSync()
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
