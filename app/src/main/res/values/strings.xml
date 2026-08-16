@@ -4,7 +4,8 @@
     <string name="no_calendars_found">No calendars found on this device.</string>
     <string name="upcoming_events_title">Upcoming Events</string>
     <string name="no_calendars_selected">Pick some calendars first on the main screen.</string>
-    <string name="no_upcoming_events">No upcoming events in the next 30 days.</string>
+    <string name="no_upcoming_events">No upcoming events in the next %1$d days.</string>
+    <string name="upcoming_window_notice">Showing events for the next %1$d days</string>
     <string name="refresh_events">Refresh</string>
     <string name="view_upcoming_events">View upcoming events</string>
     <string name="lead_time_label">Alert me before events:</string>
@@ -14,6 +15,12 @@
     <string name="lead_time_30">30 min</string>
     <string name="lead_time_60">1 hour</string>
     <string name="alarm_checkbox_label">Alarm</string>
+    <string name="alarm_notification_title">Event alarm</string>
+    <string name="dismiss_alarm">Dismiss</string>
+    <string name="mute_all_label">Mute all alarms</string>
+    <string name="ringtone_label">Alarm ringtone:</string>
+    <string name="ringtone_default_label">Default</string>
+    <string name="ringtone_picker_title">Choose alarm ringtone</string>
     <string name="back">Back</string>
     <string name="expand_account">Show sub-calendars and colors</string>
     <string name="tab_sub_calendars">Sub-calendars</string>
