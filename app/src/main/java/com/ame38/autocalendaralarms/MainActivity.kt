@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
@@ -17,7 +19,6 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.TextView
@@ -27,6 +28,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -92,11 +94,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.upcomingWindowText).text =
             getString(R.string.upcoming_window_notice, EventsRepository.UPCOMING_WINDOW_DAYS)
 
-        findViewById<CheckBox>(R.id.muteAllCheckBox).apply {
-            isChecked = CalendarPrefs.isMuted(this@MainActivity)
-            setOnCheckedChangeListener { _, isChecked ->
-                CalendarPrefs.setMuted(this@MainActivity, isChecked)
-                if (isChecked) {
+        findViewById<MaterialButton>(R.id.muteAllButton).apply {
+            updateMuteAllButton(this, CalendarPrefs.isMuted(this@MainActivity))
+            setOnClickListener {
+                val muted = !CalendarPrefs.isMuted(this@MainActivity)
+                CalendarPrefs.setMuted(this@MainActivity, muted)
+                updateMuteAllButton(this, muted)
+                if (muted) {
                     // stop anything currently ringing too, not just future alarms
                     stopService(Intent(this@MainActivity, AlarmSoundService::class.java))
                 }
@@ -227,6 +231,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         findViewById<TextView>(R.id.ringtoneNameText).text = name
+    }
+
+    private fun updateMuteAllButton(button: MaterialButton, muted: Boolean) {
+        if (muted) {
+            button.text = getString(R.string.unmute_all_label)
+            button.setIconResource(R.drawable.ic_alarm_off)
+            button.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#33888888"))
+        } else {
+            button.text = getString(R.string.mute_all_label)
+            button.setIconResource(R.drawable.ic_alarm)
+            button.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+        }
     }
 
     private fun setupLeadTimeOptions() {
