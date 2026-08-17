@@ -122,12 +122,6 @@
 
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginBottom="16dp"
-        android:background="#33888888" />
-
     <Button
         android:id="@+id/viewEventsButton"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
