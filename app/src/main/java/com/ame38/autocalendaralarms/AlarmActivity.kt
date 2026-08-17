@@ -20,6 +20,16 @@ class AlarmActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activeInstance = this
+
+        // this activity's launch can be delayed (e.g. it loses a race with
+        // the foreground app while the phone is in active use), so the alarm
+        // may already have been dismissed via the notification by the time
+        // we actually get here - don't show a stale "stop alarm" screen
+        if (!AlarmSoundService.isRunning) {
+            finish()
+            return
+        }
+
         showOverLockScreen()
         setContentView(R.layout.activity_alarm)
         bindEventTitle()
@@ -33,6 +43,10 @@ class AlarmActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (!AlarmSoundService.isRunning) {
+            finish()
+            return
+        }
         bindEventTitle()
     }
 

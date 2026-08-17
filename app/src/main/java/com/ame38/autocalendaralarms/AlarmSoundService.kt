@@ -29,6 +29,11 @@ class AlarmSoundService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val autoStopRunnable = Runnable { stopSelf() }
 
+    override fun onCreate() {
+        super.onCreate()
+        isRunning = true
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val eventId = intent?.getLongExtra(AlarmReceiver.EXTRA_EVENT_ID, -1L) ?: -1L
         val title = intent?.getStringExtra(AlarmReceiver.EXTRA_EVENT_TITLE) ?: getString(R.string.app_name)
@@ -179,6 +184,7 @@ class AlarmSoundService : Service() {
         mediaPlayer = null
         stopVibration()
         stopForeground(STOP_FOREGROUND_REMOVE)
+        isRunning = false
         AlarmActivity.finishIfShowing()
         super.onDestroy()
     }
@@ -187,6 +193,15 @@ class AlarmSoundService : Service() {
 
     companion object {
         const val ALARM_NOTIFICATION_ID = 999001
+
+        // lets AlarmActivity check whether the alarm it's about to display for
+        // is still actually active - it can finish being created after a
+        // dismiss already happened (e.g. launch was delayed while the user
+        // was busy in another app), in which case finishIfShowing() already
+        // fired too early to reach it
+        @Volatile
+        var isRunning: Boolean = false
+            private set
         private const val AUTO_STOP_MILLIS = 60 * 1000L
     }
 }
