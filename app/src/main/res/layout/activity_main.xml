@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -37,10 +38,19 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="8dp">
 
-        <Button
-            android:id="@+id/viewEventsButton"
+        <TextView
+            android:id="@+id/upcomingWindowText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:textColor="#888888" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/muteAllButton"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -48,30 +58,18 @@
             android:minHeight="0dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
             android:textSize="12sp"
             android:textAllCaps="false"
-            android:text="@string/view_upcoming_events" />
-
-        <CheckBox
-            android:id="@+id/muteAllCheckBox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="end"
+            app:icon="@drawable/ic_alarm"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconSize="18dp"
+            app:cornerRadius="20dp"
             android:text="@string/mute_all_label" />
 
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/upcomingWindowText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textStyle="italic"
-        android:textColor="#888888"
-        android:layout_marginBottom="16dp" />
 
     <LinearLayout
         android:id="@+id/ringtoneRow"
@@ -129,6 +127,16 @@
         android:layout_height="1dp"
         android:layout_marginBottom="16dp"
         android:background="#33888888" />
+
+    <Button
+        android:id="@+id/viewEventsButton"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textAllCaps="false"
+        android:layout_marginBottom="16dp"
+        android:text="@string/view_upcoming_events" />
 
     <LinearLayout
         android:layout_width="match_parent"
