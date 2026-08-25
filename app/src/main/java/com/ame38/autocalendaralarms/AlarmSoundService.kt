@@ -202,6 +202,6 @@ class AlarmSoundService : Service() {
         @Volatile
         var isRunning: Boolean = false
             private set
-        private const val AUTO_STOP_MILLIS = 60 * 1000L
+        private const val AUTO_STOP_MILLIS = 2 * 60 * 1000L
     }
 }

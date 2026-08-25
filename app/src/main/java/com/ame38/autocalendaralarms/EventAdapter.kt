@@ -53,7 +53,11 @@ class EventAdapter(private val events: List<EventEntry>) :
             if (excluded) {
                 AlarmScheduler.cancelAlarm(context, event.id)
             } else {
-                AlarmScheduler.scheduleSingleAlarm(context, event)
+                // a recurring event shows up once per occurrence but the
+                // checkbox covers the whole event, so put every occurrence of
+                // it back, not just the row that was tapped
+                events.filter { it.id == event.id }
+                    .forEach { AlarmScheduler.scheduleSingleAlarm(context, it) }
             }
         }
     }
